@@ -86,7 +86,9 @@ class DialClient:
         for tool_call in ai_message.tool_calls:
             tool_name = tool_call["function"]["name"]
             tool_args = json.loads(tool_call["function"]["arguments"])
+            tool_call_id = tool_call["id"]
 
+            print(f"Tool call detected ({tool_call_id}): {tool_name} with args {tool_args}")
             try:
                 tool_result = await self.mcp_client.call_tool(tool_name, tool_args)
 
@@ -95,7 +97,7 @@ class DialClient:
                     Message(
                         role=Role.TOOL,
                         content=str(tool_result),
-                        tool_call_id=tool_call["id"],
+                        tool_call_id=tool_call_id,
                     )
                 )
             except Exception as e:
