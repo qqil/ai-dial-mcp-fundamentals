@@ -88,4 +88,27 @@ class DialClient:
         # 2. Get tool name and tool arguments (arguments is a JSON, don't forget about that)
         # 3. Wrap into try/except block and call mcp_client tool call. If succeed then add tool message (don't forget
         #    about tool call id), otherwise add tool message with error message (it kind of fallback strategy).
-        raise NotImplementedError()
+        if (not ai_message.tool_calls):
+            print("No tool calls to execute.")
+            return
+
+        for tool_call in ai_message.tool_calls:
+            tool_name = tool_call["function"]["name"]
+            tool_args = json.loads(tool_call["function"]["arguments"])
+            tool_call_id = tool_call["id"]
+
+            try:
+                tool_result = await self.mcp_client.call_tool(tool_name, tool_args)
+                messages.append(Message(
+                    role=Role.TOOL,
+                    content=tool_result,
+                    tool_call_id=tool_call_id
+                ))
+            except Exception as e:
+                error_message = f"Error calling tool {tool_name}: {str(e)}"
+                print(error_message)
+                messages.append(Message(
+                    role=Role.TOOL,
+                    content=error_message,
+                    tool_call_id=tool_call_id
+                ))
